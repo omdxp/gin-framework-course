@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/Omar-Belghaouti/gin-framework-course/controller"
@@ -38,7 +39,16 @@ func main() {
 	})
 
 	server.POST("/videos", func(c *gin.Context) {
-		c.JSON(200, videoController.Save(c))
+		err := videoController.Save(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusCreated, gin.H{
+				"message": "Video created successfully",
+			})
+		}
 	})
 
 	server.Run(":8080")
