@@ -27,6 +27,10 @@ func main() {
 
 	server := gin.New()
 
+	server.Static("/css", "./templates/css")
+
+	server.LoadHTMLGlob("templates/*.html")
+
 	server.Use(
 		gin.Recovery(),
 		middlewares.Logger(),
@@ -34,22 +38,30 @@ func main() {
 		gindump.Dump(),
 	)
 
-	server.GET("/videos", func(c *gin.Context) {
-		c.JSON(200, videoController.FindAll())
-	})
+	apiRoutes := server.Group("/api")
+	{
+		apiRoutes.GET("/videos", func(c *gin.Context) {
+			c.JSON(200, videoController.FindAll())
+		})
 
-	server.POST("/videos", func(c *gin.Context) {
-		err := videoController.Save(c)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-		} else {
-			c.JSON(http.StatusCreated, gin.H{
-				"message": "Video created successfully",
-			})
-		}
-	})
+		apiRoutes.POST("/videos", func(c *gin.Context) {
+			err := videoController.Save(c)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+			} else {
+				c.JSON(http.StatusCreated, gin.H{
+					"message": "Video created successfully",
+				})
+			}
+		})
+	}
+
+	viewRoutes := server.Group("/views")
+	{
+		viewRoutes.GET("/videos", videoController.ShowAll)
+	}
 
 	server.Run(":8080")
 }
